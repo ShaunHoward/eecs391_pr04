@@ -59,7 +59,7 @@ public class RLAgent extends Agent {
 	private static final double ALPHA = 0.001;
 
 	// the GLIE exploration value
-	private static final double EPSILON = 0.009;
+	private static final double EPSILON = 0.02;
 
 	// state before the current state
 	private State prevState = null;
@@ -664,7 +664,7 @@ public class RLAgent extends Agent {
 				footman, curAction.getAttack().get(footman), curAction);
 		double maxCurrQ = calcQValue(currFeatureVector);
 
-		double lossCalculated = (reward + (GAMMA * maxCurrQ - previousQValue));
+		double lossCalculated = (reward + (GAMMA * maxCurrQ) - previousQValue);
 
 		// updates the weight vector
 		updateWeights(previousFeatures, lossCalculated, ALPHA);
