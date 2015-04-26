@@ -58,7 +58,7 @@ public class RLAgent extends Agent {
 	private static final double ALPHA = 0.0001;
 	
 	//the GLIE exploration value
-	private static final double EPSILON = 0.02;
+	private static final double EPSILON = 0.1;
 	
 	//state before the current state
 	private State prevState = null;
@@ -69,6 +69,9 @@ public class RLAgent extends Agent {
 	//good and bad footmen
     private List<Integer> myFootmen;
     private List<Integer> enemyFootmen;
+    
+    //track the rewards received
+    private List<Double> rewards;
 	
 	//actions before the current actions
 	private AttackAction prevAction = new AttackAction(new HashMap<Integer, Integer>());
@@ -77,6 +80,7 @@ public class RLAgent extends Agent {
 	//this will make the agent freeze its Q function and play 5 evaluation games
 	private boolean evaluationMode = false;
 	private int gameNumber = 1;
+	private int evalGameNumber = 1;
 	
 	//limit the number of episodes to 100
 	private int episodes = 100;
@@ -135,7 +139,10 @@ public class RLAgent extends Agent {
                 featureWeights[i] = random.nextDouble() * 2 - 1;
             }
         }
-	}
+        
+        rewards = new ArrayList<>();
+        rewards.add(avgGameReward);
+    }
 
 	@Override
 	public Map<Integer, Action> initialStep(StateView stateView, History.HistoryView statehistory) {
@@ -166,6 +173,7 @@ public class RLAgent extends Agent {
             }
         }
 		
+        //intialize first values for the game state, game reward, and for the mode to operate in
 		currentState = stateView;
 		
 		currentGameReward = 0.0;
@@ -175,6 +183,7 @@ public class RLAgent extends Agent {
 		//code for testing mode
 		if (!evaluationMode) {
 			avgGameReward = 0.0;
+			evalGameNumber = 1;
 		}
 		
 		firstRound = true;
@@ -185,17 +194,10 @@ public class RLAgent extends Agent {
 	}
 
     /**
-     * You will need to calculate the reward at each step and update your totals. You will also need to
-     * check if an event has occurred. If it has then you will need to update your weights and select a new action.
+     * Calculates the reward at each step and updates the totals.
+     * Checks if an event has occurred. If it has then you weights are updated and a new action is selected.
      *
-     * If you are using the footmen vectors you will also need to remove killed units. To do so use the historyView
-     * to get a DeathLog. Each DeathLog tells you which player's unit died and the unit ID of the dead unit. To get
-     * the deaths from the last turn do something similar to the following snippet. Please be aware that on the first
-     * turn you should not call this as you will get nothing back.
-     *
-     * for(DeathLog deathLog : historyView.getDeathLogs(stateView.getTurnNumber() -1)) {
-     *     System.out.println("Player: " + deathLog.getController() + " unit: " + deathLog.getDeadUnitID());
-     * }
+     * Removes dead units from footmen vectors. remove killed units.
      *
      * You should also check for completed actions using the history view. Obviously you never want a footman just
      * sitting around doing nothing (the enemy certainly isn't going to stop attacking). So at the minimum you will
@@ -240,10 +242,12 @@ public class RLAgent extends Agent {
 				return builder;
 			}
 			
+			double currReward = 0;
+			
 			for (Integer footman : prevState.getFootmen()) {
 				
 				double reward = calculateReward(currentState, prevState, prevAction, footman);
-//				System.out.println("Reward = " + reward);
+				System.out.println("Reward = " + reward);
 				currentGameReward += Math.max(currentGameReward, reward);
 				
 				if (!evaluationMode) {
@@ -269,15 +273,18 @@ public class RLAgent extends Agent {
 	}
 
     /**
-     * Here you will calculate the cumulative average rewards for your testing episodes. If you have just
-     * finished a set of test episodes you will call out testEpisode.
+     * Calculates the cumulative average rewards for testing episodes and prints them.
      *
-     * It is also a good idea to save your weights with the saveWeights function.
+     * Weights are saved with the saveWeights function.
+     * 
+     * @param stateView - the current state
+     * @param historyView - the history of states
      */
 	@Override
-	public void terminalStep(StateView stateView, History.HistoryView statehistory) {
+	public void terminalStep(StateView stateView, History.HistoryView historyView) {
 		
         // MAKE SURE YOU CALL printTestData after you finish a test episode.
+		StringBuilder builder = new StringBuilder();
 
         // Save your weights
         saveWeights(featureWeights);
@@ -289,28 +296,46 @@ public class RLAgent extends Agent {
 				won = true;
 			}
 		}
-		String winLose = won ? "won" : "lost";
+				
+		String result = won ? "won" : "lost";
 		
+		//Calculate the average cumulative reward during tests
 		if (evaluationMode) {
-			avgGameReward += (currentGameReward - avgGameReward) / ((gameNumber - 1) % 15 - 9);
-			System.out.printf("Played evaluation game %d and %s (Cumulative reward: %.2f)\n", ((gameNumber - 1) % 15 - 9), winLose, currentGameReward);
+			
+			//find the current average game reward
+			avgGameReward = ((avgGameReward * evalGameNumber) + currentGameReward) / ++evalGameNumber;
+			
+			System.out.printf("Played evaluation game %d and %s (Cumulative reward: %.2f)\n", ((gameNumber - 1) % 15 - 9), result, currentGameReward);
+			
+			//one more eval game was played
+			evalGameNumber++;
 		} else {
-			System.out.printf("Played game %d and %s\n", ((gameNumber / 15) * 10 + (gameNumber % 15)), winLose);
+			builder.append("Played game: " + ((gameNumber / 15) * 10 + (gameNumber % 15)) + " and " + result + "\n");
 		}
 		
+		//update epsilon value and print the test reward data
 		if (gameNumber % 15 == 0) {
 			currEpsilon = currEpsilon < 0 ? 0 : currEpsilon - 0.002f;
-			String out = String.format("Games trained on: %d\tAverage Reward:%f\n", ((gameNumber / 15) * 10), avgGameReward);
-			System.out.print(out);
+			
+			//print the test reward data
+			rewards.add(avgGameReward);
+			printTestData(rewards);
+			
+			builder.append("Games trained on: " + ((gameNumber / 15) * 10) + ", Average Reward: " + avgGameReward + "\n");
+			String out = "Games trained on: " + ((gameNumber / 15) * 10) + ", Average Reward: " + avgGameReward + "\n";
 			finalOutput += out;
 		}
 		
+		//the game is completed, print episode tally
 		if (((gameNumber / 15) * 10) >= episodes) {
 			System.out.println();
 			System.out.println(finalOutput);
 			System.exit(0);
 		}
 		
+		System.out.print(builder.toString());
+		
+		//one more game was played
 		gameNumber++;
 	}
 	
@@ -421,7 +446,7 @@ public class RLAgent extends Agent {
 	 */
 	public void updateWeights(double[] f, double calcLoss, double alpha) {
 		for (int i = 0; i < featureWeights.length; i++) {
-			featureWeights[i] += (alpha * calcLoss * f[i]);
+			featureWeights[i] += (alpha * calcLoss);// * f[i]);
 		}
 	}
 	
@@ -465,9 +490,9 @@ public class RLAgent extends Agent {
 		int i = 0;
 		for (Integer footman : state.getFootmen()) {
 			//epsilon-greedy strategy
-			if (!evaluationMode && (1.0 - currEpsilon <= random.nextInt(1))) {
+			if (!evaluationMode && (1.0 - currEpsilon <= random.nextDouble())) {
 				int randEnemy = randInt(0, state.getEnemyFootmen().size() - 1);
-				attack.put(footman, Math.abs(i - state.getEnemyFootmen().get(randEnemy)));
+				attack.put(footman, state.getEnemyFootmen().get(randEnemy));
 //				System.out.println("Hit random assignment");
 				i++;
 			} else {
@@ -534,10 +559,10 @@ public class RLAgent extends Agent {
 		AttackAction curAction = selectAction(currentState, prevAction);
 		
 		// Find Q(s',a')
-		double[] freshFeatureVector = calculateFeatureVector(currentState, footman, curAction.getAttack().get(footman), curAction);
-		double freshQ = calcQValue(freshFeatureVector);
+		double[] currFeatureVector = calculateFeatureVector(currentState, footman, curAction.getAttack().get(footman), curAction);
+		double maxCurrQ = calcQValue(currFeatureVector);
 		
-		double lossCalculated = (reward + GAMMA * freshQ - previousQValue);
+		double lossCalculated = (reward + (GAMMA * maxCurrQ - previousQValue));
 		
 		// updates the weight vector
 		updateWeights(previousFeatures, lossCalculated, ALPHA);
