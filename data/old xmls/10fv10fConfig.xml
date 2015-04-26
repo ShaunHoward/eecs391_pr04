@@ -1,8 +1,8 @@
 <Configuration>
-	<Map>src/rl_5fv5f.xml</Map>
+	<Map>data/rl_10fv10f.xml</Map>
 	<Player Id="0">
 		<AgentClass>
-			<ClassName>RLAgent</ClassName>
+			<ClassName>QLearningAgent</ClassName>
 			<Argument>200</Argument>
 		</AgentClass>
 	</Player>

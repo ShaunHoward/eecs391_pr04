@@ -1,3 +1,5 @@
+package edu.cwru.sepia.agent;
+
 public class Pair<T, U> {
     private T x; //first member of pair
     private U y; //second member of pair
