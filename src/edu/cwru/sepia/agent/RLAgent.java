@@ -55,10 +55,10 @@ public class RLAgent extends Agent {
 	private static final double GAMMA = 0.9;
 	
 	//the learning rate of the agent
-	private static final double ALPHA = 0.01;
+	private static final double ALPHA = 0.0001;
 	
 	//the GLIE exploration value
-	private static final double EPSILON = 0.0001;
+	private static final double EPSILON = 0.02;
 	
 	//state before the current state
 	private State prevState = null;
