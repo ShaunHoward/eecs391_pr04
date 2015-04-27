@@ -84,7 +84,8 @@ public class RLAgent extends Agent {
 	private boolean evaluationMode = false;
 	private int gameNumber = 1;
 	private int evalGameNumber = 1;
-
+	private int gamesWon = 0;
+	
 	// limit the number of episodes to 100
 	private int episodes = 100;
 
@@ -319,6 +320,9 @@ public class RLAgent extends Agent {
 			}
 		}
 
+		if (won == true && !evaluationMode)
+			gamesWon += 1;
+		
 		String result = won ? "won" : "lost";
 
 		// Calculate the average cumulative reward during tests
@@ -360,6 +364,7 @@ public class RLAgent extends Agent {
 		if (((gameNumber / 15) * 10) >= episodes) {
 			System.out.println();
 			System.out.println(finalOutput);
+			System.out.println("Games won " +gamesWon);
 			System.exit(0);
 		}
 
