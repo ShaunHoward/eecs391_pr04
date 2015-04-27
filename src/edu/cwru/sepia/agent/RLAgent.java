@@ -332,8 +332,7 @@ public class RLAgent extends Agent {
 			avgGameReward = ((avgGameReward * evalGameNumber) + currentGameReward)
 					/ ++evalGameNumber;
 
-			System.out
-					.printf("Played evaluation game %d and %s (Cumulative reward: %.2f)\n",
+			System.out.printf("Played evaluation game %d and %s (Cumulative reward: %.2f)\n",
 							((gameNumber - 1) % 15 - 9), result,
 							currentGameReward);
 
@@ -353,8 +352,8 @@ public class RLAgent extends Agent {
 			rewards.add(avgGameReward);
 			printTestData(rewards);
 
-			builder.append("Games trained on: " + ((gameNumber / 15) * 10)
-					+ ", Average Reward: " + avgGameReward + "\n");
+//			builder.append("Games trained on: " + ((gameNumber / 15) * 10)
+//					+ ", Average Reward: " + avgGameReward + "\n");
 			String out = "Games trained on: " + ((gameNumber / 15) * 10)
 					+ ", Average Reward: " + avgGameReward + "\n";
 			finalOutput += out;
@@ -362,7 +361,6 @@ public class RLAgent extends Agent {
 
 		// the game is completed, print episode tally
 		if (((gameNumber / 15) * 10) >= episodes) {
-			System.out.println();
 			System.out.println(finalOutput);
 			builder.append("Games won: " + gamesWon);
 			System.out.print(builder.toString());
@@ -473,7 +471,6 @@ public class RLAgent extends Agent {
 
 		// determine the ratio of hit-points from enemy to those of footman
 		featureVector[5] = unitHealth.get(footman) / Math.max(unitHealth.get(enemy), 1);
-			//	/ //Math.max(unitHealth.get(footman), .01);
         for (Integer man : footmen){
         	if (unitHealth.get(man) > 30){
         		featureVector[6] += 10;
@@ -481,15 +478,7 @@ public class RLAgent extends Agent {
         		featureVector[6] += 0.1;
         	}
         }
-//		// determine whether the enemy is the closest possible enemy
-//		if (State.isClosest(footman, enemy, enemyFootmen, unitLocations)) {
-//			featureVector[6] += .3;
-//		} else {
-//			featureVector[6] -= .4;
-//		}
-//
-//		// determine if the enemy can be attacked based on range from current
-//
+
 		if (State.isAdjacent(unitLocations.get(footman),
 				unitLocations.get(enemy))) {
 			featureVector[7] += 10;
@@ -502,57 +491,10 @@ public class RLAgent extends Agent {
 		
 		// determine how many enemies can currently attack the given footman
 		if (adjEnemyCount <= 2) {
-			featureVector[8] += adjEnemyCount * 10;//((0.02 * adjEnemyCount) / random.nextDouble());
+			featureVector[8] += adjEnemyCount * 10;
 		} else {
-			featureVector[8] -= adjEnemyCount * 10; //((0.1 * adjEnemyCount) / random.nextDouble());
+			featureVector[8] -= adjEnemyCount * 10;
 		}
-//		
-//		//int totalEnemyHealth = 0;
-//		for (Integer e : enemyFootmen){
-//			//totalEnemyHealth += unitHealth.get(e);
-//			if (unitHealth.get(e) > 50){
-//				featureVector[9] -= 10;
-//			} else {
-//				featureVector[9] += 15;
-//			}
-//		}
-//		
-		//featureVector[10] += (unitHealth.get(footman) - unitHealth.get(enemy)) / totalEnemyHealth;
-
-		//
-		// double[] featureVector = new double[NUM_FEATURES];
-		// // constant
-		// featureVector[0] = 1;
-		// // health of footman
-		// featureVector[1] = unitHealth.get(footman);
-		// // health of enemy
-		// featureVector[2] = unitHealth.get(enemy);
-		// // # of other friendly units currently attacking enemy
-		// featureVector[3] = 0;
-		// for (Integer attacker : attack.keySet()) {
-		// if (attacker == footman) {
-		// continue;
-		// }
-		// featureVector[3] += attack.get(attacker) == enemy ? 1 : 0;
-		// }
-		// // is enemy the current target of footman?
-		// if (attack.get(footman) == null) {
-		// featureVector[4] = 0;
-		// } else {
-		// featureVector[4] = attack.get(footman) == enemy ? 1 : 0;
-		// }
-		// // what is the ratio of hitpoints of enemy to footman
-		// featureVector[5] = unitHealth.get(footman) /
-		// Math.max(unitHealth.get(enemy), 0.001);
-		// // is enemy my closest enemy?
-		// featureVector[6] = State.isClosest(footman, enemy, enemyFootmen,
-		// unitLocations) ? 1 : 0;
-		// // is enemy within attacking range?
-		// featureVector[7] = State.isAdjacent(unitLocations.get(footman),
-		// unitLocations.get(enemy)) ? 1 : 0;
-		// // how many enemies can attack footman?
-		// featureVector[8] = State.getAdjacentEnemyCount(footman, enemyFootmen,
-		// unitLocations);
 
 		return featureVector;
 	}
