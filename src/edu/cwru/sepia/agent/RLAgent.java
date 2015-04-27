@@ -373,7 +373,7 @@ public class RLAgent extends Agent {
 	 * Determines the Q weight value by using the given feature vector.
 	 * 
 	 * @param featureVector
-	 *            - the vectore of feature values to use in calculation
+	 *            - the vector of feature values to use in calculation
 	 * @return the Q weight value of the given feature vector
 	 */
 	public double calcQValue(double[] featureVector) {
@@ -436,90 +436,94 @@ public class RLAgent extends Agent {
 			Map<Integer, Pair<Integer, Integer>> unitLocations,
 			Map<Integer, Integer> attack) {
 
-		// double[] featureVector = new double[NUM_FEATURES];
-		//
-		// //first feature value is always 1
-		// featureVector[0] = 1;
-		//
-		// //footman health
-		// featureVector[1] = unitHealth.get(footman);
-		//
-		// //enemy health
-		// featureVector[2] = unitHealth.get(enemy);
-		//
-		// //the count of additional team mates attacking enemy at this moment
-		// featureVector[3] = 0;
-		// for (Integer attacker : attack.keySet()) {
-		// if (attacker == footman) {
-		// continue;
-		// }
-		// featureVector[3] -= attack.get(attacker) == enemy ? 1 : 0;
-		// }
-		//
-		// //determine if the footman currently targets the given enemy
-		// if (attack.get(footman) == null) {
-		// featureVector[4] -= .01;
-		// } else if (attack.get(footman) == enemy) {
-		// featureVector[4] += .02;
-		// }
-		//
-		// //determine the ratio of hit-points from enemy to those of footman
-		// featureVector[5] = unitHealth.get(footman) /
-		// Math.max(unitHealth.get(enemy), .001);
-		//
-		// //determine whether the enemy is the closest possible enemy
-		// if (State.isClosest(footman, enemy, enemyFootmen, unitLocations)){
-		// featureVector[6] += .3;
-		// } else {
-		// featureVector[6] -= .4;
-		// }
-		//
-		// //determine if the enemy can be attacked based on range from current
-		// footman
-		// if(State.isAdjacent(unitLocations.get(footman),
-		// unitLocations.get(enemy))){
-		// featureVector[7] += .03;
-		// }
-		// int adjEnemyCount = State.getAdjacentEnemyCount(footman,
-		// enemyFootmen, unitLocations);
-		// //determine how many enemies can currently attack the given footman
-		// if (adjEnemyCount <= 2){
-		// featureVector[8] += ((0.02 * adjEnemyCount) / random.nextDouble());
-		// } else {
-		// featureVector[8] -= ((0.1 * adjEnemyCount) / random.nextDouble());
-		// }
-		//
-
 		double[] featureVector = new double[NUM_FEATURES];
-		// constant
+
+		// first feature value is always 1
 		featureVector[0] = 1;
-		// health of footman
+
+		// footman health
 		featureVector[1] = unitHealth.get(footman);
-		// health of enemy
+
+		// enemy health
 		featureVector[2] = unitHealth.get(enemy);
-		// # of other friendly units currently attacking enemy
+
+		// the count of additional team mates attacking enemy at this moment
 		featureVector[3] = 0;
 		for (Integer attacker : attack.keySet()) {
 			if (attacker == footman) {
 				continue;
 			}
-			featureVector[3] += attack.get(attacker) == enemy ? 1 : 0;
+			featureVector[3] -= attack.get(attacker) == enemy ? 1 : 0;
 		}
-		// is enemy the current target of footman?
+
+		// determine if the footman currently targets the given enemy
 		if (attack.get(footman) == null) {
-			featureVector[4] = 0;
-		} else {
-			featureVector[4] = attack.get(footman) == enemy ? 1 : 0;
+			featureVector[4] -= .01;
+		} else if (attack.get(footman) == enemy) {
+			featureVector[4] += .02;
 		}
-		// what is the ratio of hitpoints of enemy to footman
-		featureVector[5] = unitHealth.get(footman) / Math.max(unitHealth.get(enemy), 0.001);
-		// is enemy my closest enemy?
-		featureVector[6] = State.isClosest(footman, enemy, enemyFootmen, unitLocations) ? 1 : 0;
-		// is enemy within attacking range?
-		featureVector[7] = State.isAdjacent(unitLocations.get(footman), unitLocations.get(enemy)) ? 1 : 0;
-		// how many enemies can attack footman?
-		featureVector[8] = State.getAdjacentEnemyCount(footman, enemyFootmen, unitLocations);
-		
+
+		// determine the ratio of hit-points from enemy to those of footman
+		featureVector[5] = unitHealth.get(footman)
+				/ Math.max(unitHealth.get(enemy), .001);
+
+		// determine whether the enemy is the closest possible enemy
+		if (State.isClosest(footman, enemy, enemyFootmen, unitLocations)) {
+			featureVector[6] += .3;
+		} else {
+			featureVector[6] -= .4;
+		}
+
+		// determine if the enemy can be attacked based on range from current
+
+		if (State.isAdjacent(unitLocations.get(footman),
+				unitLocations.get(enemy))) {
+			featureVector[7] += .03;
+		}
+		int adjEnemyCount = State.getAdjacentEnemyCount(footman, enemyFootmen,
+				unitLocations);
+		// determine how many enemies can currently attack the given footman
+		if (adjEnemyCount <= 2) {
+			featureVector[8] += ((0.02 * adjEnemyCount) / random.nextDouble());
+		} else {
+			featureVector[8] -= ((0.1 * adjEnemyCount) / random.nextDouble());
+		}
+
+		//
+		// double[] featureVector = new double[NUM_FEATURES];
+		// // constant
+		// featureVector[0] = 1;
+		// // health of footman
+		// featureVector[1] = unitHealth.get(footman);
+		// // health of enemy
+		// featureVector[2] = unitHealth.get(enemy);
+		// // # of other friendly units currently attacking enemy
+		// featureVector[3] = 0;
+		// for (Integer attacker : attack.keySet()) {
+		// if (attacker == footman) {
+		// continue;
+		// }
+		// featureVector[3] += attack.get(attacker) == enemy ? 1 : 0;
+		// }
+		// // is enemy the current target of footman?
+		// if (attack.get(footman) == null) {
+		// featureVector[4] = 0;
+		// } else {
+		// featureVector[4] = attack.get(footman) == enemy ? 1 : 0;
+		// }
+		// // what is the ratio of hitpoints of enemy to footman
+		// featureVector[5] = unitHealth.get(footman) /
+		// Math.max(unitHealth.get(enemy), 0.001);
+		// // is enemy my closest enemy?
+		// featureVector[6] = State.isClosest(footman, enemy, enemyFootmen,
+		// unitLocations) ? 1 : 0;
+		// // is enemy within attacking range?
+		// featureVector[7] = State.isAdjacent(unitLocations.get(footman),
+		// unitLocations.get(enemy)) ? 1 : 0;
+		// // how many enemies can attack footman?
+		// featureVector[8] = State.getAdjacentEnemyCount(footman, enemyFootmen,
+		// unitLocations);
+
 		return featureVector;
 	}
 
@@ -584,7 +588,7 @@ public class RLAgent extends Agent {
 		for (Integer footman : state.getFootmen()) {
 			// epsilon-greedy strategy
 			if (!evaluationMode && (currEpsilon > random.nextDouble())) {
-				int randEnemy = randInt(0, state.getEnemyFootmen().size()-1);
+				int randEnemy = randInt(0, state.getEnemyFootmen().size() - 1);
 				attack.put(footman, state.getEnemyFootmen().get(randEnemy));
 				// System.out.println("Hit random assignment");
 				i++;
