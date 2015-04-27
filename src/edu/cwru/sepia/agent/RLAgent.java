@@ -264,7 +264,7 @@ public class RLAgent extends Agent {
 
 				double reward = calculateReward(currentState, prevState,
 						prevAction, footman);
-				System.out.println("Reward = " + reward);
+				//System.out.println("Reward = " + reward);
 				currentGameReward += reward; //Math.max(currentGameReward, reward);
 
 				if (!evaluationMode) {
@@ -474,7 +474,13 @@ public class RLAgent extends Agent {
 		// determine the ratio of hit-points from enemy to those of footman
 		featureVector[5] = unitHealth.get(footman) / Math.max(unitHealth.get(enemy), 1);
 			//	/ //Math.max(unitHealth.get(footman), .01);
-//
+        for (Integer man : footmen){
+        	if (unitHealth.get(man) > 30){
+        		featureVector[6] += 10;
+        	} else {
+        		featureVector[6] += 0.1;
+        	}
+        }
 //		// determine whether the enemy is the closest possible enemy
 //		if (State.isClosest(footman, enemy, enemyFootmen, unitLocations)) {
 //			featureVector[6] += .3;
@@ -500,6 +506,18 @@ public class RLAgent extends Agent {
 		} else {
 			featureVector[8] -= adjEnemyCount * 10; //((0.1 * adjEnemyCount) / random.nextDouble());
 		}
+//		
+//		//int totalEnemyHealth = 0;
+//		for (Integer e : enemyFootmen){
+//			//totalEnemyHealth += unitHealth.get(e);
+//			if (unitHealth.get(e) > 50){
+//				featureVector[9] -= 10;
+//			} else {
+//				featureVector[9] += 15;
+//			}
+//		}
+//		
+		//featureVector[10] += (unitHealth.get(footman) - unitHealth.get(enemy)) / totalEnemyHealth;
 
 		//
 		// double[] featureVector = new double[NUM_FEATURES];
