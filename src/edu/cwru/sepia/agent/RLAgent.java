@@ -265,6 +265,8 @@ public class RLAgent extends Agent {
 				return builder;
 			}
 
+			double currReward = 0;
+			
 			for (Integer footman : prevState.getFootmen()) {
 				double reward = calculateReward(currentState, prevState, prevAction, footman);
 				System.out.println("Reward = " + reward);
@@ -455,7 +457,7 @@ public class RLAgent extends Agent {
 		featureVector[1] = unitHealth.get(footman);
 
 		// enemy health
-		featureVector[2] = unitHealth.get(enemy);
+		featureVector[2] = -unitHealth.get(enemy);
 
 		// the count of additional team mates attacking enemy at this moment
 		featureVector[3] = 0;
