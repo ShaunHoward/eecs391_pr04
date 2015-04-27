@@ -85,7 +85,7 @@ public class RLAgent extends Agent {
 	private int gameNumber = 1;
 	private int evalGameNumber = 1;
 	private int gamesWon = 0;
-	
+
 	// limit the number of episodes to 100
 	private int episodes = 100;
 
@@ -265,7 +265,7 @@ public class RLAgent extends Agent {
 				double reward = calculateReward(currentState, prevState,
 						prevAction, footman);
 				System.out.println("Reward = " + reward);
-				currentGameReward += Math.max(currentGameReward, reward);
+				currentGameReward += reward; //Math.max(currentGameReward, reward);
 
 				if (!evaluationMode) {
 					updateWeights(reward, currentState, prevState, prevAction,
@@ -319,10 +319,10 @@ public class RLAgent extends Agent {
 				won = true;
 			}
 		}
-
+		
 		if (won == true && !evaluationMode)
 			gamesWon += 1;
-		
+
 		String result = won ? "won" : "lost";
 
 		// Calculate the average cumulative reward during tests
@@ -364,7 +364,8 @@ public class RLAgent extends Agent {
 		if (((gameNumber / 15) * 10) >= episodes) {
 			System.out.println();
 			System.out.println(finalOutput);
-			System.out.println("Games won " +gamesWon);
+			builder.append("Games won: " + gamesWon);
+			System.out.print(builder.toString());
 			System.exit(0);
 		}
 
@@ -450,7 +451,7 @@ public class RLAgent extends Agent {
 		featureVector[1] = unitHealth.get(footman);
 
 		// enemy health
-		featureVector[2] = unitHealth.get(enemy);
+		featureVector[2] = -unitHealth.get(enemy);
 
 		// the count of additional team mates attacking enemy at this moment
 		featureVector[3] = 0;
@@ -458,41 +459,43 @@ public class RLAgent extends Agent {
 			if (attacker == footman) {
 				continue;
 			}
-			featureVector[3] -= attack.get(attacker) == enemy ? 1 : 0;
+			featureVector[3] += attack.get(attacker) == enemy ? 10 : 0.1;
 		}
 
-		// determine if the footman currently targets the given enemy
-		if (attack.get(footman) == null) {
-			featureVector[4] -= .01;
-		} else if (attack.get(footman) == enemy) {
-			featureVector[4] += .02;
-		}
-
-		// determine the ratio of hit-points from enemy to those of footman
-		featureVector[5] = unitHealth.get(footman)
-				/ Math.max(unitHealth.get(enemy), .001);
-
-		// determine whether the enemy is the closest possible enemy
-		if (State.isClosest(footman, enemy, enemyFootmen, unitLocations)) {
-			featureVector[6] += .3;
+		// determine if the footman currently targets the nearest enemy if this is the one
+		if (State.isClosest(footman, enemy, enemyFootmen, unitLocations)){//attack.get(footman) == enemy) {
+			featureVector[4] += 100;
+		} else if (attack.get(footman) == null) {
+			featureVector[4] -= 100;
 		} else {
-			featureVector[6] -= .4;
+			featureVector[4] += 50;
 		}
 
-		// determine if the enemy can be attacked based on range from current
-
-		if (State.isAdjacent(unitLocations.get(footman),
-				unitLocations.get(enemy))) {
-			featureVector[7] += .03;
-		}
-		int adjEnemyCount = State.getAdjacentEnemyCount(footman, enemyFootmen,
-				unitLocations);
-		// determine how many enemies can currently attack the given footman
-		if (adjEnemyCount <= 2) {
-			featureVector[8] += ((0.02 * adjEnemyCount) / random.nextDouble());
-		} else {
-			featureVector[8] -= ((0.1 * adjEnemyCount) / random.nextDouble());
-		}
+//		// determine the ratio of hit-points from enemy to those of footman
+//		featureVector[5] = unitHealth.get(footman)
+//				/ Math.max(unitHealth.get(enemy), 1);
+//
+//		// determine whether the enemy is the closest possible enemy
+//		if (State.isClosest(footman, enemy, enemyFootmen, unitLocations)) {
+//			featureVector[6] += .3;
+//		} else {
+//			featureVector[6] -= .4;
+//		}
+//
+//		// determine if the enemy can be attacked based on range from current
+//
+//		if (State.isAdjacent(unitLocations.get(footman),
+//				unitLocations.get(enemy))) {
+//			featureVector[7] += .03;
+//		}
+//		int adjEnemyCount = State.getAdjacentEnemyCount(footman, enemyFootmen,
+//				unitLocations);
+//		// determine how many enemies can currently attack the given footman
+//		if (adjEnemyCount <= 2) {
+//			featureVector[8] += ((0.02 * adjEnemyCount) / random.nextDouble());
+//		} else {
+//			featureVector[8] -= ((0.1 * adjEnemyCount) / random.nextDouble());
+//		}
 
 		//
 		// double[] featureVector = new double[NUM_FEATURES];
