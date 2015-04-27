@@ -471,9 +471,9 @@ public class RLAgent extends Agent {
 			featureVector[4] += 50;
 		}
 
-//		// determine the ratio of hit-points from enemy to those of footman
-//		featureVector[5] = unitHealth.get(footman)
-//				/ Math.max(unitHealth.get(enemy), 1);
+		// determine the ratio of hit-points from enemy to those of footman
+		featureVector[5] = unitHealth.get(footman) / Math.max(unitHealth.get(enemy), 1);
+			//	/ //Math.max(unitHealth.get(footman), .01);
 //
 //		// determine whether the enemy is the closest possible enemy
 //		if (State.isClosest(footman, enemy, enemyFootmen, unitLocations)) {
@@ -484,18 +484,22 @@ public class RLAgent extends Agent {
 //
 //		// determine if the enemy can be attacked based on range from current
 //
-//		if (State.isAdjacent(unitLocations.get(footman),
-//				unitLocations.get(enemy))) {
-//			featureVector[7] += .03;
-//		}
-//		int adjEnemyCount = State.getAdjacentEnemyCount(footman, enemyFootmen,
-//				unitLocations);
-//		// determine how many enemies can currently attack the given footman
-//		if (adjEnemyCount <= 2) {
-//			featureVector[8] += ((0.02 * adjEnemyCount) / random.nextDouble());
-//		} else {
-//			featureVector[8] -= ((0.1 * adjEnemyCount) / random.nextDouble());
-//		}
+		if (State.isAdjacent(unitLocations.get(footman),
+				unitLocations.get(enemy))) {
+			featureVector[7] += 10;
+		} else {
+			featureVector[7] -= 10;
+		}
+		
+		int adjEnemyCount = State.getAdjacentEnemyCount(footman, enemyFootmen,
+				unitLocations);
+		
+		// determine how many enemies can currently attack the given footman
+		if (adjEnemyCount <= 2) {
+			featureVector[8] += adjEnemyCount * 10;//((0.02 * adjEnemyCount) / random.nextDouble());
+		} else {
+			featureVector[8] -= adjEnemyCount * 10; //((0.1 * adjEnemyCount) / random.nextDouble());
+		}
 
 		//
 		// double[] featureVector = new double[NUM_FEATURES];
