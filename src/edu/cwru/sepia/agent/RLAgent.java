@@ -67,7 +67,7 @@ public class RLAgent extends Agent {
 	// the random instance for use of generating random events
 	private static Random random;
 
-	// good and bad footmen
+	// player and enemy footmen
 	private List<Integer> myFootmen;
 	private List<Integer> enemyFootmen;
 
@@ -92,6 +92,7 @@ public class RLAgent extends Agent {
 	// Q-learning weights
 	public Double[] featureWeights;
 
+	// Boolean to record whether or not the agent is in its first round
 	private boolean firstRound = true;
 
 	/**
@@ -117,6 +118,7 @@ public class RLAgent extends Agent {
 	public RLAgent(int playernum, String[] args) {
 		super(playernum);
 
+		//Initializes the current epsilon
 		currEpsilon = EPSILON;
 
 		random = new Random(12345);
@@ -181,12 +183,14 @@ public class RLAgent extends Agent {
 			}
 		}
 
-		// intialize first values for the game state, game reward, and for the
+		// initialize first values for the game state, game reward, and for the
 		// mode to operate in
 		currentState = stateView;
 
+		// initializes the current game reward
 		currentGameReward = 0.0;
 
+		// checks if agent needs to enter evaluation mode
 		evaluationMode = (gameNumber - 1) % 15 > 9;
 
 		// code for testing mode
@@ -226,11 +230,11 @@ public class RLAgent extends Agent {
 	 * @return New actions to execute or nothing if an event has not occurred.
 	 */
 	@Override
-	public Map<Integer, Action> middleStep(StateView newState,
-			History.HistoryView statehistory) {
+	public Map<Integer, Action> middleStep(StateView newState, History.HistoryView statehistory) {
 		Map<Integer, Action> builder = new HashMap<Integer, Action>();
 		currentState = newState;
 
+		//Lists for current state's own and enemy footmen, health, and locations
 		List<Integer> curFootmen = new ArrayList<Integer>();
 		List<Integer> curEnemyFootmen = new ArrayList<Integer>();
 		Map<Integer, Integer> curUnitHealth = new HashMap<Integer, Integer>();
@@ -239,9 +243,12 @@ public class RLAgent extends Agent {
 		for (UnitView unit : currentState.getAllUnits()) {
 			String unitTypeName = unit.getTemplateView().getName();
 			if (unitTypeName.equals("Footman")) {
+				//Stores location of each footman as a coordinate pair in the locations list
 				curUnitLocations.put(unit.getID(), new Pair<Integer, Integer>(
 						unit.getXPosition(), unit.getYPosition()));
+				//Stores until health in the health list
 				curUnitHealth.put(unit.getID(), unit.getHP());
+				//Adds footman to the own or enemy list
 				if (currentState.getUnits(playernum).contains(unit)) {
 					curFootmen.add(unit.getID());
 				} else {
@@ -258,18 +265,13 @@ public class RLAgent extends Agent {
 				return builder;
 			}
 
-			double currReward = 0;
-
 			for (Integer footman : prevState.getFootmen()) {
-
-				double reward = calculateReward(currentState, prevState,
-						prevAction, footman);
+				double reward = calculateReward(currentState, prevState, prevAction, footman);
 				System.out.println("Reward = " + reward);
 				currentGameReward += reward; //Math.max(currentGameReward, reward);
 
 				if (!evaluationMode) {
-					updateWeights(reward, currentState, prevState, prevAction,
-							footman);
+					updateWeights(reward, currentState, prevState, prevAction, footman);
 				}
 			}
 			// System.out.println("");
@@ -282,6 +284,7 @@ public class RLAgent extends Agent {
 
 		prevAction = selectAction(prevState, prevAction);
 
+		//Creates the compound attacks
 		for (Integer footmanID : prevAction.getAttack().keySet()) {
 			Action b = TargetedAction.createCompoundAttack(footmanID,
 					prevAction.getAttack().get(footmanID));
@@ -313,6 +316,7 @@ public class RLAgent extends Agent {
 		saveWeights(featureWeights);
 
 		boolean won = false;
+		//Checks if any own footmen are alive and agent has won
 		for (UnitView unit : currentState.getUnits(playernum)) {
 			String unitTypeName = unit.getTemplateView().getName();
 			if (unitTypeName.equals("Footman")) {
@@ -451,7 +455,7 @@ public class RLAgent extends Agent {
 		featureVector[1] = unitHealth.get(footman);
 
 		// enemy health
-		featureVector[2] = -unitHealth.get(enemy);
+		featureVector[2] = unitHealth.get(enemy);
 
 		// the count of additional team mates attacking enemy at this moment
 		featureVector[3] = 0;
@@ -578,6 +582,7 @@ public class RLAgent extends Agent {
 		footmen.addAll(curState.getFootmen());
 		footmen.addAll(curState.getEnemyFootmen());
 
+		//Checks if any footmen were injured in the event
 		for (Integer footman : footmen) {
 			someoneInjured |= (curState.getUnitHealth().get(footman) < prevState
 					.getUnitHealth().get(footman));
@@ -746,9 +751,10 @@ public class RLAgent extends Agent {
 	}
 
 	/**
+	 * Checks if two coordinates are adjacent
 	 * 
-	 * @param p
-	 * @param q
+	 * @param p The first coordinate pair
+	 * @param q The second coordinate pair
 	 * @return True, if p and q are adjacent
 	 */
 	private boolean areAdjacent(Pair<Integer, Integer> p,
