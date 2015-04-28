@@ -38,3 +38,11 @@ After testing on thousands of episodes with both 5v5 and 10v10 (6500 initially, 
 Overall we do believe our agent to be learning, even if at a slow rate. 
 The number of wins attained on average per 6500 games was ~2500 on 10v10 and ~2000 on 5v5, sometimes higher and sometimes lower. This means that the agent is winning from 30 to 40 percent of the time, which is acceptable for 
 a naive intelligent agent using Q-learning and linear approximation. 
+
+Some notes:
+
+The code is well-commented, so any questions you have should be answered by them.
+We track SEPIA environment variables in our own state, so we have our own system for determining optimal Q actions/features/values.
+Learning values in given agent weight files can be plotted to get the learning rate of the agent.
+
+Please enjoy our Q-learning agent and have a great day!
