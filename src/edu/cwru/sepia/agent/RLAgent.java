@@ -116,6 +116,9 @@ public class RLAgent extends Agent {
 	public RLAgent(int playernum, String[] args) {
 		super(playernum);
 		
+		//assign something to the weights vector
+		featureWeights = new Double[10];
+		
 		finalOutput = new StringBuilder();
 		
 		//Initializes the current epsilon
@@ -142,7 +145,9 @@ public class RLAgent extends Agent {
 		//loads the weights from a file or makes new random ones
 		if (loadWeights) {
 			featureWeights = loadWeights();
-		} else {
+		} 
+		
+		if(featureWeights == null || !loadWeights) {
 			// initialize weights to random values between -1 and 1
 			featureWeights = new Double[NUM_FEATURES];
 			for (int i = 0; i < featureWeights.length; i++) {
@@ -410,9 +415,9 @@ public class RLAgent extends Agent {
 	 * unit ids. The features are the following:
 	 * 
 	 *first feature value is always 1 to remain non-zero
-	 *second feature value is the health of the given footman
+	 *second feature value is the health of the given footman, but negative
 	 *third feature value is the health of the given footman's enemy target
-	 *fourth feature is valued from attacking the closest footman
+	 *fourth feature is valued from this footman attacking the closest enemy footman
 	 *fifth feature is a multiple of how many enemies are attacking the given footman
 	 *sixth feature values determining the ratio of hit-points of footman to target enemy
 	 *seventh feature values footmen staying alive
@@ -442,10 +447,10 @@ public class RLAgent extends Agent {
 		// second feature value is the health of the given footman
 		featureVector[1] = unitHealth.get(footman);
 
-		// third feature value is the health of the given footman's enemy target
+		// third feature value is the health of the given footman's enemy target, but negative
 		featureVector[2] = -unitHealth.get(enemy);
 
-		// fourth feature is valued from attacking the closest footman
+		// fourth feature is valued from this footman attacking the closest enemy footman
 		if (GameState.isClosest(footman, enemy, enemyFootmen, unitLocations)){//attack.get(footman) == enemy) {
 			//positively weigh attacking the closest footman
 			featureVector[3] += 100;
