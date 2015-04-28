@@ -14,6 +14,14 @@ The PRNG seed is valued at 12345 to ensure repeatability.
 Every 10 epsiodes, the agent will play 5 more evaluation episodes. These will determine the average cumulative reward
 of the agent. These values can be graphed with their associated episode count to reveal the learning rate of the agent by means of linear regression or a best fit line.
 
+The agent also employs the epsilon-greedy action selection strategy. What happens is that when a random double value
+is less than the given epsilon, a random target will be assigned to the current footman selected. If the value does 
+not fit the part, the action that maximizes the Q-function will be chosen. This action should generally be chosen
+based on distance and health of both the footmen and their enemies. The closest enemy will be preferred to attack. 
+
+After every evaluation mode is complete (every 15 episodes), the epsilon value will be decreased by 0.002. Once epsilon
+goes negative, it will simply be set to 0. This means that there will be no random selection with epsilon is 0.
+
 The agent has a Q-function that is based on the Russell and Norvig AI book.
 
 It calculates the next Q value like so:
@@ -43,6 +51,10 @@ After testing on thousands of episodes with both 5v5 and 10v10 (6500 initially, 
 Overall we do believe our agent to be learning, even if at a slow rate. 
 The number of wins attained on average per 6500 games was ~2500 on 10v10 and ~2000 on 5v5, sometimes higher and sometimes lower. This means that the agent is winning from 30 to 40 percent of the time, which is acceptable for 
 a naive intelligent agent using Q-learning and linear approximation. 
+
+We probably could have gotten the agent to perform better had we tinkered more with the constant values that affect the
+Q-value, like learning rate, epsilon, and gamma. The values that we have, however, are consistently good as far as we
+can tell and they were the default values given by the professor.
 
 Some notes:
 
