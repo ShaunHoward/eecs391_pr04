@@ -8,6 +8,12 @@ Team: Shaun Howard (smh150) and Matt Swartwout (mws85)
 The agent controls multiple footmen in the SEPIA game engine in order to attack and defeat the enemy footmen who have a
 very intelligent attack system. The agent must be very smart to out-wit its enemies and defeat them. When it harms or defeats them successfully, it will get a good reward. When it loses allies or any of them are harmed, it will receive negative reward.
 
+Weights can be loaded at runtime from a file located in "agent_weights/weights.txt".
+If the file is not present, then the game will automatically load weights with random values from between -1 and 1.
+The PRNG seed is valued at 12345 to ensure repeatability.
+Every 10 epsiodes, the agent will play 5 more evaluation episodes. These will determine the average cumulative reward
+of the agent. These values can be graphed with their associated episode count to reveal the learning rate of the agent by means of linear regression or a best fit line.
+
 The agent has a Q-function that is based on the Russell and Norvig AI book.
 
 It calculates the next Q value like so:
@@ -29,8 +35,7 @@ It consists of the following features and their numerical values:
 	 *ninth feature values how many enemies can currently attack the given footman
 	 
 We figured valuing life and hating death would be a good idea for features. Basically, the footmen will try to attack
-the closest enemies and remain alive, whilst dealing damage to those close enemies. If any die, they are punished, but
-if enemies die they are rewarded.
+the closest enemies and remain alive, whilst dealing damage to those close enemies. If any die or are wounded, they are punished, but if enemies die or are wounded, they are rewarded.
 
 After testing on thousands of episodes with both 5v5 and 10v10 (6500 initially, then loading weights to do another 6500
 -> 13000), we found that the agent plays more consistenly over time. The agent won the most in the first 6500 iterations, but it was only marginal from the number of wins attained in the second iteration of 6500 based on the good weights. These weights are included in the given zip file. They are labeled according to number of agents and number of iterations.
