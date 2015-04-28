@@ -331,8 +331,6 @@ public class RLAgent extends Agent {
 		if (won == true && !evaluationMode)
 			gamesWon += 1;
 
-		String result = won ? "won" : "lost";
-
 		// Calculate the average cumulative reward during tests
 		if (evaluationMode) {
 
@@ -340,17 +338,8 @@ public class RLAgent extends Agent {
 			avgGameReward = ((avgGameReward * evalGameNumber) + currentGameReward)
 					/ ++evalGameNumber;
 
-			System.out.printf("Played evaluation game %d and %s (Cumulative reward: %.2f)\n",
-							((gameNumber - 1) % 15 - 9), result,
-							currentGameReward);
-
 			// one more eval game was played
 			evalGameNumber++;
-		} else {
-			//otherwise we have been playing real games and just want to know if we won or lost
-			builder.append("Played game: "
-					+ ((gameNumber / 15) * 10 + (gameNumber % 15)) + " and "
-					+ result + "\n");
 		}
 
 		// update epsilon value and print the test reward data when complete with eval mode
@@ -362,17 +351,12 @@ public class RLAgent extends Agent {
 			// print the test reward data
 			rewards.add(avgGameReward);
 			printTestData(rewards);
-
-			String out = "Games trained on: " + ((gameNumber / 15) * 10)
-					+ ", Average Reward: " + avgGameReward + "\n";
-			finalOutput.append(out);
 		}
 
 		// the game is now complete, must print all relevant episode data from entire game
 		if (((gameNumber / 15) * 10) >= episodes) {
 			System.out.println(finalOutput.toString());
-			builder.append("Games won: " + gamesWon);
-			System.out.print(builder.toString());
+			System.out.print("Games won: " + gamesWon);
 			System.exit(0);
 		}
 
@@ -781,7 +765,7 @@ public class RLAgent extends Agent {
 	 *
 	 * This function will take your set of weights and save them to a file.
 	 * Overwriting whatever file is currently there. You will use this when
-	 * training your agents. You will include th output of this function from
+	 * training your agents. You will include the output of this function from
 	 * your trained agent with your submission.
 	 *
 	 * Look in the agent_weights folder for the output.
