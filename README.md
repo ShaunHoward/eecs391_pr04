@@ -1,5 +1,5 @@
 # eecs391_pr04
-Reinforcement learning agent to move multipler archers in SEPIA game engine.
+Reinforcement learning agent to move multiple archers in SEPIA game engine.
 
 Q-Learning Agent with linear approximation for the final project of EECS391 at Case Western Reserve University, Spring 2015.
 
@@ -11,7 +11,7 @@ very intelligent attack system. The agent must be very smart to out-wit its enem
 Weights can be loaded at runtime from a file located in "agent_weights/weights.txt".
 If the file is not present, then the game will automatically load weights with random values from between -1 and 1.
 The PRNG seed is valued at 12345 to ensure repeatability.
-Every 10 epsiodes, the agent will play 5 more evaluation episodes. These will determine the average cumulative reward
+Every 10 episodes, the agent will play 5 more evaluation episodes. These will determine the average cumulative reward
 of the agent. These values can be graphed with their associated episode count to reveal the learning rate of the agent by means of linear regression or a best fit line.
 
 The agent also employs the epsilon-greedy action selection strategy. What happens is that when a random double value
@@ -26,7 +26,7 @@ The agent has a Q-function that is based on the Russell and Norvig AI book.
 
 It calculates the next Q value like so:
 
-Q(t+1) = Q(t) + alpha * (reward + (discount * optimalNextQ) - currQ)
+Q(t+1) = Q(t) + alpha * (reward + (discount * optimalQ(t+1)) - Q(t))
 
 The feature vector for this learning agent is the same for each footman that is controlled.
 
@@ -46,7 +46,7 @@ We figured valuing life and hating death would be a good idea for features. Basi
 the closest enemies and remain alive, whilst dealing damage to those close enemies. If any die or are wounded, they are punished, but if enemies die or are wounded, they are rewarded.
 
 After testing on thousands of episodes with both 5v5 and 10v10 (6500 initially, then loading weights to do another 6500
--> 13000), we found that the agent plays more consistenly over time. The agent won the most in the first 6500 iterations, but it was only marginal from the number of wins attained in the second iteration of 6500 based on the good weights. These weights are included in the given zip file. They are labeled according to number of agents and number of iterations.
+= 13000), we found that the agent plays more consistently over time. The agent won the most in the first 6500 iterations, but it was only marginal from the number of wins attained in the second iteration of 6500 based on the good weights. These weights are included in the given zip file. They are labeled according to number of agents and number of iterations.
 
 Overall we do believe our agent to be learning, even if at a slow rate. 
 The number of wins attained on average per 6500 games was ~2500 on 10v10 and ~2000 on 5v5, sometimes higher and sometimes lower. This means that the agent is winning from 30 to 40 percent of the time, which is acceptable for 
@@ -62,4 +62,4 @@ The code is well-commented, so any questions you have should be answered by them
 We track SEPIA environment variables in our own state, so we have our own system for determining optimal Q actions/features/values.
 Learning values in given agent weight files can be plotted to get the learning rate of the agent.
 
-Please enjoy our Q-learning agent and have a great day!
+Please enjoy our Q-learning agent and have a great day/night!
