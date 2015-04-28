@@ -384,15 +384,16 @@ public class RLAgent extends Agent {
 	}
 
 	/**
-	 * Determines the Q weight value by using the given feature vector.
+	 * Determines the Q-function value by using the given feature vector.
 	 * 
-	 * @param featureVector
-	 *            - the vector of feature values to use in calculation
-	 * @return the Q weight value of the given feature vector
+	 * @param featureVector - the vector of feature values to use for Q-function
+	 * calculation
+	 * @return the Q-function value of the given feature vector
 	 */
 	public double calculateQValue(double[] featureVector) {
 		double qWeight = 0;
 
+		//take dot product of feature vector and feature weights
 		for (int i = 0; i < featureWeights.length; i++) {
 			qWeight += featureWeights[i] * featureVector[i];
 		}
@@ -404,14 +405,10 @@ public class RLAgent extends Agent {
 	 * Gets the feature vector of a given state using the footman id, the enemy
 	 * id, and an attack action map.
 	 * 
-	 * @param state
-	 *            - the game state to get the features of
-	 * @param footman
-	 *            - the footman id to get the feature vector in reference to
-	 * @param enemy
-	 *            - the enemy id targeted by the given footman
-	 * @param action
-	 *            - an attack action map to keep track of the current attack
+	 * @param state - the game state to get the features of
+	 * @param footman - the footman id to get the feature vector in reference to
+	 * @param enemy - the enemy id targeted by the given footman
+	 * @param action - an attack action map to keep track of the current attack
 	 *            actions
 	 * @return the feature vector in reference to the given values
 	 */
@@ -426,22 +423,25 @@ public class RLAgent extends Agent {
 	 * Gets the feature vector of a given state using the footman id, the enemy
 	 * id, a list of footmen ids, a list of enemy ids, the health of all units,
 	 * a map of the unit locations, and a map of attack actions in reference to
-	 * unit ids.
+	 * unit ids. The features are the following:
 	 * 
-	 * @param footman
-	 *            - the footman id in reference to
-	 * @param enemy
-	 *            - the enemy targeted by the given footman
-	 * @param footmen
-	 *            - a list of the footmen currently in the game state
-	 * @param enemyFootmen
-	 *            - a list of the enemy footmen currently in the game state
-	 * @param unitHealth
-	 *            - a list of the health of all units
-	 * @param unitLocations
-	 *            - a map of the locations of all units
-	 * @param attack
-	 *            - the attack action map in refernce to unit ids
+	 *first feature value is always 1 to remain non-zero
+	 *second feature value is the health of the given footman
+	 *third feature value is the health of the given footman's enemy target
+	 *fourth feature is valued from attacking the closest footman
+	 *fifth feature is a multiple of how many enemies are attacking the given footman
+	 *sixth feature values determining the ratio of hit-points of footman to target enemy
+	 *seventh feature values footmen staying alive
+	 *eighth feature is based on whether the target is adjacent for attacking
+	 *ninth feature values how many enemies can currently attack the given footman
+	 * 
+	 * @param footman - the footman id in reference to
+	 * @param enemy - the enemy targeted by the given footman
+	 * @param footmen - a list of the footmen currently in the game state
+	 * @param enemyFootmen - a list of the enemy footmen currently in the game state
+	 * @param unitHealth - a list of the health of all units
+	 * @param unitLocations - a map of the locations of all units
+	 * @param attack - the attack action map in refernce to unit ids
 	 * @return the feature vector in reference to the given values
 	 */
 	public static double[] getFeatureVector(Integer footman, Integer enemy,
@@ -452,43 +452,55 @@ public class RLAgent extends Agent {
 
 		double[] featureVector = new double[NUM_FEATURES];
 
-		// first feature value is always 1
+		// first feature value is always 1 to remain non-zero
 		featureVector[0] = 1;
 
-		// footman health
+		// second feature value is the health of the given footman
 		featureVector[1] = unitHealth.get(footman);
 
-		// enemy health
+		// third feature value is the health of the given footman's enemy target
 		featureVector[2] = -unitHealth.get(enemy);
 
-		// the count of additional team mates attacking enemy at this moment
-		featureVector[3] = 0;
+		// fourth feature is valued from attacking the closest footman
+		if (GameState.isClosest(footman, enemy, enemyFootmen, unitLocations)){//attack.get(footman) == enemy) {
+			//positively weigh attacking the closest footman
+			featureVector[3] += 100;
+			
+		} else if (attack.get(footman) == null) {
+			featureVector[3] -= 100;
+		} else {
+			featureVector[3] += 50;
+		}
+
+		
+		// fifth feature is a multiple of how many enemies are attacking the given footman
+		featureVector[4] = 0;
 		for (Integer attacker : attack.keySet()) {
+			//we cannot attack ourselves
 			if (attacker == footman) {
 				continue;
 			}
-			featureVector[3] += attack.get(attacker) == enemy ? 10 : 0.1;
+			
+			//greatly weigh attacking the enemy over not
+			featureVector[4] += attack.get(attacker) == enemy ? 10 : 0.1;
 		}
 
-		// determine if the footman currently targets the nearest enemy if this is the one
-		if (GameState.isClosest(footman, enemy, enemyFootmen, unitLocations)){//attack.get(footman) == enemy) {
-			featureVector[4] += 100;
-		} else if (attack.get(footman) == null) {
-			featureVector[4] -= 100;
-		} else {
-			featureVector[4] += 50;
-		}
 
-		// determine the ratio of hit-points from enemy to those of footman
+		// sixth feature values determining the ratio of hit-points of footman to target enemy
 		featureVector[5] = unitHealth.get(footman) / Math.max(unitHealth.get(enemy), 1);
+		
+		// seventh feature values footmen staying alive
         for (Integer man : footmen){
-        	if (unitHealth.get(man) > 30){
+        	//greatly weight having hp
+        	if (unitHealth.get(man) > 0){
         		featureVector[6] += 10;
         	} else {
+        		//otherwise, add values for still having any footmen alive
         		featureVector[6] += 0.1;
         	}
         }
-
+        
+        // eighth feature is based on whether the target is adjacent for attacking
 		if (GameState.isAdjacent(unitLocations.get(footman),
 				unitLocations.get(enemy))) {
 			featureVector[7] += 10;
@@ -499,7 +511,7 @@ public class RLAgent extends Agent {
 		int adjEnemyCount = GameState.getAdjacentEnemyCount(footman, enemyFootmen,
 				unitLocations);
 		
-		// determine how many enemies can currently attack the given footman
+		// ninth feature values how many enemies can currently attack the given footman
 		if (adjEnemyCount <= 2) {
 			featureVector[8] += adjEnemyCount * 10;
 		} else {
@@ -566,16 +578,23 @@ public class RLAgent extends Agent {
 	private AttackAction selectAction(GameState state, AttackAction priorAction) {
 		Map<Integer, Integer> attack = new HashMap<Integer, Integer>();
 		for (Integer footman : state.getFootmen()) {
-			// epsilon-greedy strategy
+			
+			/*
+			 *Implementation of the epsilon-greedy strategy
+			 *Selects a random action when a random value is less than epsilon
+			 *This causes less random events to occur over time when epsilon is decreased
+			 */
 			if (!evaluationMode && (currentEpsilon > random.nextDouble())) {
+				//choose random enemy
 				int randEnemy = randInt(0, state.getEnemyFootmen().size() - 1);
+				
+				//plan to attack them
 				attack.put(footman, state.getEnemyFootmen().get(randEnemy));
-				// System.out.println("Hit random assignment");
 			} else {
 				double maxQ = Double.NEGATIVE_INFINITY;
 				int currentTarget = state.getEnemyFootmen().get(0);
 
-				// Find the enemy that gives the highest Q function
+				// Find the enemy that gives the maximum Q function
 				for (Integer enemy : state.getEnemyFootmen()) {
 					double[] f = calculateFeatureVector(state, footman, enemy,
 							priorAction);
@@ -585,31 +604,13 @@ public class RLAgent extends Agent {
 						currentTarget = enemy;
 					}
 				}
+				
+				//choose to attack that enemy
 				attack.put(footman, currentTarget);
 			}
 		}
 
 		return new AttackAction(attack);
-	}
-
-	/**
-	 * Returns a pseudo-random number between min and max, inclusive. The
-	 * difference between min and max can be at most Integer.MAX_VALUE - 1.
-	 *
-	 * @param min
-	 *            - the minimum value
-	 * @param max
-	 *            - the maximum value, which MUST be greater than min.
-	 * @return an integer between min and max, inclusive.
-	 * @see java.util.Random#nextInt(int)
-	 */
-	public static int randInt(int min, int max) {
-
-		// nextInt is normally exclusive of the top value,
-		// so add 1 to make it inclusive
-		int randomNum = random.nextInt((max - min) + 1) + min;
-
-		return randomNum;
 	}
 
 	/**
@@ -710,6 +711,23 @@ public class RLAgent extends Agent {
 		}
 
 		return reward;
+	}
+	
+	/**
+	 * Gets a pseudo-random number inclusively between the given min and max integers.
+	 * The maximum difference between min and max should be Integer.MAX_VALUE - 1.
+	 *
+	 * @param min - the minimum range value
+	 * @param max - the maximum range value, which needs to be > min.
+	 * @return an integer inclusively between min and max
+	 * @see java.util.Random#nextInt(int)
+	 */
+	public static int randInt(int min, int max) {
+
+		// add 1 to nextInt to make it inclusive because it's usually exclusive
+		int randomNum = random.nextInt((max - min) + 1) + min;
+
+		return randomNum;
 	}
 
 	/**
