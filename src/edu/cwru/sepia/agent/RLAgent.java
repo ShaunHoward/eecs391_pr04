@@ -568,12 +568,13 @@ public class RLAgent extends Agent {
 	}
 
 	/**
-	 * Uses the Q Function to determine which actions (Attack(Footman, Enemy))
-	 * maximize Q.
+	 * Uses the Q Function to determine which actions maximize Q.
+	 * The only real actions are to attack the enemy team with the footman team.
+	 * This method selects who attacks who.
 	 * 
-	 * @param state
-	 * @param priorAction
-	 * @return A attack plan which assigns targets to each footman
+	 * @param state - the current state of the game
+	 * @param priorAction - the prior action in prior state of the game
+	 * @return An attack plan which assigns a target to each footman
 	 */
 	private AttackAction selectAction(GameState state, AttackAction priorAction) {
 		Map<Integer, Integer> attack = new HashMap<Integer, Integer>();
@@ -615,23 +616,25 @@ public class RLAgent extends Agent {
 
 	/**
 	 * Updates the weights associated with the Q function features based on the
-	 * previous and current states
+	 * previous and current states.
 	 * 
-	 * @param reward
-	 * @param curState
-	 * @param priorState
-	 * @param priorAction
-	 * @param footman
+	 * @param reward - the current reward
+	 * @param currState - the current state
+	 * @param priorState - the prior state
+	 * @param priorAction - the action taken in the prior state
+	 * @param footman - the footman who created the given values
 	 */
-	private void updateWeights(double reward, GameState curState, GameState priorState,
+	private void updateWeights(double reward, GameState currState, GameState priorState,
 			AttackAction priorAction, Integer footman) {
-		GameState currentState = new GameState(curState);
+		//Determine prior features and Q value
 		double[] priorFeatures = calculateFeatureVector(priorState, footman,
 				priorAction.getAttack().get(footman), priorAction);
 		double priorQValue = calculateQValue(priorFeatures);
+		
+		GameState currentState = new GameState(currState);
 
-		// footman can be dead at this point and therefore not in curState, so
-		// add him with health of 0
+		// Any footman can be dead now, absent from currState
+		// We track that he has existed by adding him with a health of 0
 		if (!currentState.getFootmen().contains(footman)) {
 			currentState.footmenDeadCount++;
 			currentState.getFootmen().add(footman);
@@ -640,72 +643,86 @@ public class RLAgent extends Agent {
 					priorState.getUnitLocations().get(footman));
 		}
 
-		// Find the max Q function w.r.t. the possible actions
+		//Determine an action that maximizes the Q value at the state of the game
 		AttackAction curAction = selectAction(currentState, priorAction);
 
-		// Find Q(s',a')
+		// Find Q(s',a') by getting the feature vector for the current state and the max Q value
 		double[] currFeatureVector = calculateFeatureVector(currentState,
 				footman, curAction.getAttack().get(footman), curAction);
 		double maxCurrQ = calculateQValue(currFeatureVector);
 
+		//Get the loss value from the loss function of the Q-function
 		double lossCalculated = (reward + (GAMMA * maxCurrQ) - priorQValue);
 
-		// updates the weight vector
+		// update the weight vector with the loss value and prior features at the given learning rate
 		updateWeights(priorFeatures, lossCalculated, ALPHA);
 	}
 
 	/**
-	 * Finds the reward for a state and action
+	 * Calculates the reward for the given state and action.
+	 * The reward is based on the following values:
 	 * 
-	 * @param curState
-	 * @param priorState
-	 * @param priorAction
-	 * @param footman
-	 * @return The reward
+	 * Ally getting killed = -100
+	 * 
+	 * Any footman to be injured = -healthLost 
+	 * 
+	 * Enemy getting killed = +100
+	 * 
+	 * Any enemy to be injured = +healthLost
+	 * 
+	 * **Always lose 0.1 for time step
+	 * 
+	 * @param currState - the current state of the game
+	 * @param priorState - the prior state of the game
+	 * @param priorAction - the prior action taken in the prior state
+	 * @param footman - the footman to get the reward of
+	 * @return The reward of the given footman for the new state Q value
 	 */
-	private double calculateReward(GameState curState, GameState priorState,
+	private double calculateReward(GameState currState, GameState priorState,
 			AttackAction priorAction, Integer footman) {
-		// Reward = -0.1 - FHP - FKILLED + EHP + EKILLED
+		//Reward = -0.1 - footmanHP - footmanKilled + enemyHP + enemyKilled
 		double reward = -0.1;
 
-		// Update the attacking footman's location.
-		curState.getUnitLocations().put(
+		//Update the attacking footman's location.
+		currState.getUnitLocations().put(
 				priorAction.getAttack().get(footman),
 				priorState.getUnitLocations().get(
 						priorAction.getAttack().get(footman)));
 
-		// (FHP/FKILLED) Update reward based on footman's health.
-		if (!curState.getFootmen().contains(footman)) {
-			// Ally killed
+		//Update reward based on footman's health.
+		if (!currState.getFootmen().contains(footman)) {
+			//Ally killed
 			reward -= 100.0;
 		} else {
-			// Ally injured
+			//Ally injured
 			int healthLost = priorState.getUnitHealth().get(footman)
-					- curState.getUnitHealth().get(footman);
+					- currState.getUnitHealth().get(footman);
 			reward -= healthLost;
 		}
 
+		//Gather the target of the given footman
 		Integer target = priorAction.getAttack().get(footman);
 
-		if (!curState.getFootmen().contains(footman)) {
-			curState.getUnitLocations().put(footman,
+		//Get the locations of the footman and their target
+		if (!currState.getFootmen().contains(footman)) {
+			currState.getUnitLocations().put(footman,
 					priorState.getUnitLocations().get(footman));
 		}
-		if (!curState.getEnemyFootmen().contains(target)) {
-			curState.getUnitLocations().put(target,
+		if (!currState.getEnemyFootmen().contains(target)) {
+			currState.getUnitLocations().put(target,
 					priorState.getUnitLocations().get(target));
 		}
 
-		// (EHP/EKILLED) Update reward based on enemy's health.
-		if (CoordPair.areAdjacent(curState.getUnitLocations().get(footman), curState
+		//Update reward based on enemy's health.
+		if (CoordPair.areAdjacent(currState.getUnitLocations().get(footman), currState
 				.getUnitLocations().get(target))) {
-			if (!curState.getEnemyFootmen().contains(target)) {
-				// Enemy killed
+			if (!currState.getEnemyFootmen().contains(target)) {
+				//Enemy killed
 				reward += 100;
 			} else {
-				// Enemy injured
-				int healthLost = priorState.getUnitHealth().get(target)
-						- curState.getUnitHealth().get(target);
+				//Enemy injured
+				int healthLost = priorState.getUnitHealth().get(target) 
+						- currState.getUnitHealth().get(target);
 				reward += healthLost;
 			}
 		}

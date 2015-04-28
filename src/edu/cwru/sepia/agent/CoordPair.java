@@ -1,8 +1,19 @@
 package edu.cwru.sepia.agent;
 
+/**
+ * A simple coordinate pair representing a point location in SEPIA.
+ * 
+ * @author Shaun Howard, Matt Swartwout
+ *
+ * @param <T> - Any number type (best would be Double)
+ * @param <U> - Any number type (best would be Double)
+ */
 public class CoordPair<T, U> {
-    private T x; //first member of pair
-    private U y; //second member of pair
+	//first value in pair
+    private T x; 
+    
+    //second value in pair
+    private U y; 
 
     public CoordPair(T x, U y) {
         this.x = x;
@@ -45,17 +56,18 @@ public class CoordPair<T, U> {
 		return false;
 	}
 
+	/**
+	 * Check if two pairs are equal based on x and y values.
+	 * @return true if state.x=obj.x and state.y=obj.y
+	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (obj == null) {
+		if (obj == null || !(obj instanceof CoordPair)) {
             return false;
 		}
-        if (obj == this) {
-            return true;
-        }
-        if (!(obj instanceof CoordPair)) {
-            return false;
-        }
+//        if (obj == this) {
+//            return true;
+//        }
         
         CoordPair<?, ?> pair = (CoordPair<?,?>) obj;
         return x.equals(pair.getX()) && y.equals(pair.getY());
