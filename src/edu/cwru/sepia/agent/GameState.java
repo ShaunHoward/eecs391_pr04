@@ -6,25 +6,25 @@ import java.util.List;
 import java.util.Map;
 
 
-public class State {
+public class GameState {
 	private List<Integer> footmen = new ArrayList<Integer>();
 	private List<Integer> enemyFootmen = new ArrayList<Integer>();
 	private Map<Integer, Integer> unitHealth = new HashMap<Integer, Integer>();
-	private Map<Integer, Pair<Integer, Integer>> unitLocations = new HashMap<Integer, Pair<Integer, Integer>>();
+	private Map<Integer, CoordPair<Integer, Integer>> unitLocations = new HashMap<Integer, CoordPair<Integer, Integer>>();
 	public int footmenDeadCount = 0;
 	
-	public State(List<Integer> footmen, List<Integer> enemyFootmen, Map<Integer, Integer> unitHealth, Map<Integer, Pair<Integer, Integer>> unitLocations) {
+	public GameState(List<Integer> footmen, List<Integer> enemyFootmen, Map<Integer, Integer> unitHealth, Map<Integer, CoordPair<Integer, Integer>> unitLocations) {
 		this.footmen = new ArrayList<Integer>(footmen);
 		this.enemyFootmen = new ArrayList<Integer>(enemyFootmen);
 		this.unitHealth = new HashMap<Integer, Integer>(unitHealth);
-		this.unitLocations = new HashMap<Integer, Pair<Integer, Integer>>(unitLocations);
+		this.unitLocations = new HashMap<Integer, CoordPair<Integer, Integer>>(unitLocations);
 	}
 
-	public State(State state) {
+	public GameState(GameState state) {
 		this.footmen = new ArrayList<Integer>(state.getFootmen());
 		this.enemyFootmen = new ArrayList<Integer>(state.getEnemyFootmen());
 		this.unitHealth = new HashMap<Integer, Integer>(state.getUnitHealth());
-		this.unitLocations = new HashMap<Integer, Pair<Integer, Integer>>(state.getUnitLocations());
+		this.unitLocations = new HashMap<Integer, CoordPair<Integer, Integer>>(state.getUnitLocations());
 	}
 
 	public List<Integer> getFootmen() {
@@ -39,7 +39,7 @@ public class State {
 		return unitHealth;
 	}
 
-	public Map<Integer, Pair<Integer, Integer>> getUnitLocations() {
+	public Map<Integer, CoordPair<Integer, Integer>> getUnitLocations() {
 		return unitLocations;
 	}
 	
@@ -52,7 +52,7 @@ public class State {
 	 * @param unitLocations - the list of unit locations
 	 * @return if the given enemy is the closest enemy in terms of the Chebyshev distance
 	 */
-	public static boolean isClosest(Integer footman, Integer enemy, List<Integer> enemyFootmen, Map<Integer, Pair<Integer, Integer>> unitLocations) {
+	public static boolean isClosest(Integer footman, Integer enemy, List<Integer> enemyFootmen, Map<Integer, CoordPair<Integer, Integer>> unitLocations) {
 		int enemyDist = chebyshevDistance(unitLocations.get(footman), unitLocations.get(enemy));
 		
 		for (Integer curEnemy : enemyFootmen) {
@@ -71,7 +71,7 @@ public class State {
 	 * @param q - the second point to calc distance to
 	 * @return the distance between points p and q
 	 */
-	public static int chebyshevDistance(Pair<Integer, Integer> p, Pair<Integer, Integer> q) {
+	public static int chebyshevDistance(CoordPair<Integer, Integer> p, CoordPair<Integer, Integer> q) {
 		int x = p.getX() - q.getX();
 		int y = p.getY() - q.getY();
 		return Math.max(x, y);
@@ -85,7 +85,7 @@ public class State {
 	 * @param unitLocations - the unit locations in the game state
 	 * @return the number of enemies adjacent to the given footman
 	 */
-	public static int getAdjacentEnemyCount(Integer footman, List<Integer> enemyFootmen, Map<Integer, Pair<Integer, Integer>> unitLocations) {
+	public static int getAdjacentEnemyCount(Integer footman, List<Integer> enemyFootmen, Map<Integer, CoordPair<Integer, Integer>> unitLocations) {
 		int adjacent = 0;
 		for (Integer enemy : enemyFootmen) {
 			if (isAdjacent(unitLocations.get(footman), unitLocations.get(enemy))) {
@@ -102,7 +102,7 @@ public class State {
 	 * @param q - the second point to check
 	 * @return whether p and q are adjacent to eachother
 	 */
-	public static boolean isAdjacent(Pair<Integer, Integer> p, Pair<Integer, Integer> q) {
+	public static boolean isAdjacent(CoordPair<Integer, Integer> p, CoordPair<Integer, Integer> q) {
 		
 		for (int i = p.getX() - 1; i <= p.getX() + 1; i++) {
 			for (int j = p.getY() - 1; j <= p.getY() + 1; j++) {
